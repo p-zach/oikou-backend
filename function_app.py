@@ -1,8 +1,20 @@
-import http
+import json
 import azure.functions as func
+from shared.cosmos_client import get_container
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 @app.route(route="test", methods=["GET"])
 def test(req: func.HttpRequest) -> func.HttpResponse:
-    return func.HttpResponse("Test successful! Request is: " + str(req), status_code=http.HTTPStatus.OK)
+    container = get_container("facts")
+    items = list(
+        container.query_items(
+            query="SELECT * FROM c",
+            enable_cross_partition_query=True
+        )
+    )
+
+    return func.HttpResponse(
+        json.dumps(items),
+        mimetype="application/json"
+    )
