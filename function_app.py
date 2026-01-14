@@ -12,7 +12,7 @@ def test(req: func.HttpRequest) -> func.HttpResponse:
             query="SELECT * FROM c",
             enable_cross_partition_query=True
         ))
-        return func.HttpResponse(json.dumps(items), mimetype="application/json")
+        return func.HttpResponse(items[0]["id"])
     except Exception as e:
         return func.HttpResponse(
             str(e),
