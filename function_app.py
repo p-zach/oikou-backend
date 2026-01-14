@@ -1,7 +1,6 @@
 import json
 import azure.functions as func
-# from shared.cosmos_client import get_container
-# import azure.cosmos
+from shared.cosmos_client import get_container
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
