@@ -1,5 +1,5 @@
 import os
-from azure.cosmos import CosmosClient, ContainerProxy
+from azure.cosmos import CosmosClient
 
 def get_database():
     endpoint = os.environ.get("COSMOS_DB_ENDPOINT")
@@ -14,5 +14,5 @@ def get_database():
 
     return _database
 
-def get_container(container_name: str) -> ContainerProxy:
+def get_container(container_name: str):
     return get_database().get_container_client(container_name)
