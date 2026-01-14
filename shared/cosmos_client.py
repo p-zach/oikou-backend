@@ -1,11 +1,11 @@
 import os
-from azure.cosmos import CosmosClient, ContainerProxy
+from azure.cosmos import CosmosClient, DatabaseProxy, ContainerProxy
 
 # Lazy initialization of shared values
 _client = None
 _database = None
 
-def get_database():
+def get_database() -> DatabaseProxy:
     global _client, _database
 
     if _client is None:
