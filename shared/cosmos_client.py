@@ -1,23 +1,16 @@
 import os
 from azure.cosmos import CosmosClient, ContainerProxy
 
-# Lazy initialization of shared values
-_client = None
-_database = None
-
 def get_database():
-    global _client, _database
+    endpoint = os.environ.get("COSMOS_DB_ENDPOINT")
+    key = os.environ.get("COSMOS_DB_KEY")
+    database_name = os.environ.get("COSMOS_DB_DATABASE")
 
-    if _client is None:
-        endpoint = os.environ.get("COSMOS_DB_ENDPOINT")
-        key = os.environ.get("COSMOS_DB_KEY")
-        database_name = os.environ.get("COSMOS_DB_DATABASE")
+    if not all([endpoint, key, database_name]):
+        raise RuntimeError("Missing CosmosDB environment variables")
 
-        if not all([endpoint, key, database_name]):
-            raise RuntimeError("Missing CosmosDB environment variables")
-
-        _client = CosmosClient(endpoint, key)
-        _database = _client.get_database_client(database_name)
+    _client = CosmosClient(endpoint, key)
+    _database = _client.get_database_client(database_name)
 
     return _database
 
