@@ -1,6 +1,6 @@
 import json
 import azure.functions as func
-from shared.lesson import start_lesson
+from shared.lessons import start_lesson
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
@@ -25,5 +25,5 @@ def lesson_start(req: func.HttpRequest) -> func.HttpResponse:
         lesson = start_lesson(userId, region, subject, question_count)
 
         return func.HttpResponse(json.dumps(lesson), status_code=200, mimetype="application/json")
-    except:
-        return func.HttpResponse("Error processing request.", status_code=500)
+    except Exception as e:
+        return func.HttpResponse(f"Error processing request: {e}", status_code=500)
