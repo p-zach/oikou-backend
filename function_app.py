@@ -7,8 +7,8 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 @app.route(route="lesson/start", methods=["POST"])
 def lesson_start(req: func.HttpRequest) -> func.HttpResponse:
     try:
-        userId = req.headers.get("X-User-Id")
-        if not userId:
+        user_id = req.headers.get("X-User-Id")
+        if not user_id:
             return func.HttpResponse("Missing X-User-Id header", status_code=400)
         
         req_body = req.get_json()
@@ -22,7 +22,7 @@ def lesson_start(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=400
             )
         
-        lesson = start_lesson(userId, region, subject, question_count)
+        lesson = start_lesson(user_id, region, subject, question_count)
 
         return func.HttpResponse(json.dumps(lesson), status_code=200, mimetype="application/json")
     except Exception as e:

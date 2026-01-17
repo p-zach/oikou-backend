@@ -11,7 +11,7 @@ def create_multiple_choice_challenge(fact: Fact, subject_facts: list[Fact], num_
     random.shuffle(options)
 
     challenge: MultipleChoiceChallenge = {
-        "itemId": fact["id"],
+        "factId": fact["id"],
         "challengeType": "multiple-choice",
         "question": question,
         "correctOptionIndex": options.index(fact["answer"]),

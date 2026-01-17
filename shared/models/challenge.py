@@ -5,7 +5,7 @@ ChallengeType = Literal[
 ]
 
 class Challenge(TypedDict):
-    itemId: str
+    factId: str
     challengeType: ChallengeType
     question: str
 
