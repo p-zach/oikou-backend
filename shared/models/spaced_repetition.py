@@ -1,28 +1,30 @@
 from typing import Literal, Optional
-from datetime import datetime
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, fields
 
 Grade = Literal[0, 1, 2, 3]
 
 # SM-2-style scheduling
 @dataclass
 class UserFactProgress:
+    # DB interface dataclass uses non-Python casing
     id: str
-    user_id: str
-    fact_id: str
-    interval_days: int
+    userId: str
+    factId: str
+    intervalDays: int
     ease: float
     repetitions: int
-    due_at: str
-    last_reviewed_at: Optional[str] = None
+    dueAt: str
+    lastReviewedAt: Optional[str] = None
     
     @staticmethod
     def create_id(user_id: str, fact_id: str) -> str:
         return f"{user_id}|{fact_id}"
 
-    @staticmethod
-    def from_dict(d: dict) -> "UserFactProgress":
-        return UserFactProgress(**d)
+    @classmethod
+    def from_dict(cls, d: dict) -> "UserFactProgress":
+        field_names = {f.name for f in fields(cls)}
+        filtered = {k: v for k, v in d.items() if k in field_names}
+        return cls(**filtered)
 
     def to_dict(self) -> dict:
         return asdict(self)

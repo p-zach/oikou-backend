@@ -1,5 +1,5 @@
 from typing import TypedDict, Literal
-from shared.models.challenge import Challenge
+from shared.models.challenge import Challenge, ChallengeResult
 
 LessonSubject = Literal[
     "capitals", 
@@ -10,3 +10,7 @@ LessonSubject = Literal[
 class Lesson(TypedDict):
     sessionId: str
     challenges: list[Challenge]
+
+class LessonResult(TypedDict):
+    sessionId: str
+    results: list[ChallengeResult]
