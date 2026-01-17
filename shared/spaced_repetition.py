@@ -12,9 +12,7 @@ def schedule(progress: UserFactProgress, grade: Grade, now: datetime) -> UserFac
         elif progress.repetitions == 2:
             progress.intervalDays = 3
         else:
-            progress.intervalDays = round(
-                progress.intervalDays * progress.ease
-            )
+            progress.intervalDays = round(progress.intervalDays * progress.ease)
 
     progress.ease = max(
         1.3,

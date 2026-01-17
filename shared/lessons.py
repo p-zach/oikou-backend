@@ -43,8 +43,17 @@ def start_lesson(user_id: str, region: str, subject: str, question_count: int) -
         user_id, 
         lambda p: fact_in_subject(p["factId"], subject)
     )
-    review_facts, new_facts = classify_facts(subject_facts, user_fact_progress)
-    facts_to_serve = select_facts_to_serve(review_facts, new_facts, question_count)
+    review_facts, new_facts, not_due_facts = classify_facts(
+        subject_facts, 
+        user_fact_progress
+    )
+    facts_to_serve = select_facts_to_serve(
+        review_facts, 
+        new_facts, 
+        not_due_facts, 
+        user_fact_progress, 
+        question_count
+    )
 
     upsert_initial_progress_data(facts_to_serve, user_fact_progress, user_id)
 
@@ -60,6 +69,8 @@ def complete_lesson(user_id: str, session_id: str, results: list[ChallengeResult
     fact_grades = get_fact_grades(results)
 
     update_progress(user_id, fact_grades)
+
+    # TODO: Keep track of all user lessons in another DB
 
 ### Helper functions
 
@@ -96,15 +107,19 @@ def get_user_fact_progress(user_id: str, predicate: Callable[[dict], bool] | Non
     }
     return user_fact_progress
 
-def classify_facts(subject_facts: list[Fact], user_fact_progress: dict[str, UserFactProgress]) -> tuple[list[Fact], list[Fact]]:
-    """Classify facts as review facts (which the user has seen before) and new
-    facts (which the user hasn't seen before).
+def classify_facts(subject_facts: list[Fact], user_fact_progress: dict[str, UserFactProgress]) -> tuple[list[Fact], list[Fact], list[Fact]]:
+    """Classify facts as review facts (which the user has seen before and are 
+    due), new facts (which the user hasn't seen before), and facts not due yet.
     
     Returns: 
-        tuple[list[Fact], list[Fact]]: review_facts, new_facts
+        tuple[list[Fact], list[Fact], list[Fact]]: 
+            review_facts, 
+            new_facts, 
+            not_due_yet_facts
     """
     review_facts: list[Fact] = []
     new_facts: list[Fact] = []
+    not_due_yet_facts: list[Fact] = []
 
     now = datetime.now(timezone.utc)
 
@@ -115,19 +130,39 @@ def classify_facts(subject_facts: list[Fact], user_fact_progress: dict[str, User
             new_facts.append(fact)
         elif datetime.fromisoformat(progress.dueAt) <= now:
             review_facts.append(fact)
+        else:
+            not_due_yet_facts.append(fact)
 
-    return review_facts, new_facts
+    return review_facts, new_facts, not_due_yet_facts
 
-def select_facts_to_serve(review_facts: list[Fact], new_facts: list[Fact], question_count: int) -> list[Fact]:
+def select_facts_to_serve(
+        review_facts: list[Fact], 
+        new_facts: list[Fact], 
+        not_due_facts: list[Fact], 
+        user_fact_progress: dict[str, UserFactProgress],
+        question_count: int
+    ) -> list[Fact]:
     """Select which facts to serve the user. 
     
-    Prioritizes serving review facts before showing new facts.
+    Prioritizes serving review facts before showing new facts. If there are no
+    new facts to show and the user has reviewed all their due facts, show facts
+    not due yet.
     """
-    random.shuffle(review_facts)
+    # Order review facts by due date
+    review_facts.sort(key=lambda f: user_fact_progress[f["id"]].dueAt)
+    # Shuffle before adding to list so it's not always the same order
     random.shuffle(new_facts)
 
     # Always prioritize review facts
     facts_to_serve = (review_facts + new_facts)[:question_count]
+    # If we need more facts to meet question_count, extend with facts not due,
+    # ordered by due date 
+    if len(facts_to_serve) < question_count:
+        not_due_facts.sort(key=lambda f: user_fact_progress[f["id"]].dueAt)
+        facts_to_serve.extend(
+            not_due_facts[:question_count - len(facts_to_serve)]
+        )
+
     random.shuffle(facts_to_serve)
 
     return facts_to_serve
@@ -166,11 +201,11 @@ def get_fact_grades(results: list[ChallengeResult]) -> dict[str, Grade]:
     for fact_id, times_incorrect in fact_incorrect_count.items():
         if times_incorrect == 0:
             # If the user got the answer correct immediately, they receive a
-            # grade of 2, which corresponds with 'correct but difficult'. Since
-            # there is not a clear way to distinguish between that and 'correct
-            # and easy' (which would be a grade of 3), we err on the side of 
-            # showing them the fact more often.
-            grade = 2
+            # grade of 3, which corresponds with 'correct and easy'.
+            grade = 3
+            # A grade of 2 is 'correct but difficult'; there is not a clear way
+            # to distinguish the two in a correct/incorrect dichotomy like we 
+            # have here.
         elif times_incorrect == 1:
             # Receive 'wrong but familiar' if the user gets the fact wrong once
             grade = 1
