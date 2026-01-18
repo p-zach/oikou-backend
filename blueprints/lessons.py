@@ -1,7 +1,7 @@
 import json
 import logging
 import azure.functions as func
-from blueprints.router import get_router
+from blueprints.utils.router import get_router
 from shared.lessons import start_lesson, complete_lesson
 
 lessons_bp = func.Blueprint()
