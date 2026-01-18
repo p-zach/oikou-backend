@@ -6,13 +6,13 @@ from typing import Callable
 from shared.cosmos_client import get_container
 from shared.challenges import create_multiple_choice_challenge
 from shared.spaced_repetition import schedule, create_initial_progress
+from shared.facts import get_all_subject_facts
 
 from shared.models.lesson import Lesson, ChallengeResult
 from shared.models.fact import Fact, fact_in_subject
 from shared.models.spaced_repetition import UserFactProgress, Grade
 
 # Constants
-FACTS_CONTAINER_NAME = "facts"
 USER_FACT_PROGRESS_CONTAINER_NAME = "user_fact_progress"
 
 ### API interface functions
@@ -73,20 +73,6 @@ def complete_lesson(user_id: str, session_id: str, results: list[ChallengeResult
     # TODO: Keep track of all user lessons in another DB
 
 ### Helper functions
-
-def get_all_subject_facts(subject: str) -> list[Fact]:
-    """Get all facts matching the given subject."""
-    all_facts = get_container(FACTS_CONTAINER_NAME)
-    subject_facts: list[Fact] = [
-        Fact(**fact_dict)
-        for fact_dict in all_facts.query_items(
-            query="SELECT * FROM f WHERE f.subject = @subject",
-            parameters=[
-                {"name": "@subject", "value": subject},
-            ],
-        )
-    ]
-    return subject_facts
 
 def get_user_fact_progress(user_id: str, predicate: Callable[[dict], bool] | None = None) -> dict[str, UserFactProgress]:
     """Get the given user's progress for all facts they have seen.
