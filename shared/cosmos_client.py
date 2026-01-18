@@ -16,8 +16,11 @@ def get_database() -> DatabaseProxy:
         if not all([endpoint, key, database_name]):
             raise RuntimeError("Missing CosmosDB environment variables")
 
-        _client = CosmosClient(endpoint, key)
-        _database = _client.get_database_client(database_name)
+        _client = CosmosClient(str(endpoint), str(key))
+        _database = _client.get_database_client(str(database_name))
+
+    if _database is None:
+        raise RuntimeError("CosmosDB could not be initialized.")
 
     return _database
 
