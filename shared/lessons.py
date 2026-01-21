@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Callable
 
-from shared.cosmos_client import get_container
+from shared.db import USER_FACT_PROGRESS_CONTAINER_NAME, query_simple, upsert_item
 from shared.challenges import create_multiple_choice_challenge
 from shared.spaced_repetition import schedule, create_initial_progress
 from shared.facts import get_all_subject_facts
@@ -11,9 +11,6 @@ from shared.facts import get_all_subject_facts
 from shared.models.lesson import Lesson, ChallengeResult
 from shared.models.fact import Fact, fact_in_subject
 from shared.models.spaced_repetition import UserFactProgress, Grade
-
-# Constants
-USER_FACT_PROGRESS_CONTAINER_NAME = "user_fact_progress"
 
 ### API interface functions
 
@@ -79,18 +76,13 @@ def get_user_fact_progress(user_id: str, predicate: Callable[[dict], bool] | Non
     
     Optionally filter by a predicate which takes a UserFactProgress dict.
     """
-    user_progress_container = get_container(USER_FACT_PROGRESS_CONTAINER_NAME)
-    all_user_fact_progress = user_progress_container
-    # TODO: Extract all DB queries to a shared utility module
     user_fact_progress: dict[str, UserFactProgress] = {
         p["factId"]: UserFactProgress.from_dict(p)
-        for p in all_user_fact_progress.query_items(
-            query="SELECT * FROM p WHERE p.userId = @userId",
-            parameters=[
-                {"name": "@userId", "value": user_id},
-            ]
+        for p in query_simple(
+            container_name=USER_FACT_PROGRESS_CONTAINER_NAME,
+            parameters={ "userId": user_id }
         ) 
-        if predicate is not None and predicate(p)
+        if predicate is None or (predicate is not None and predicate(p))
     }
     return user_fact_progress
 
@@ -157,12 +149,11 @@ def select_facts_to_serve(
 def upsert_initial_progress_data(facts_to_serve: list[Fact], user_fact_progress: dict[str, UserFactProgress], user_id: str):
     """Create progress data in Cosmos for each fact that the user hasn't reviewed before."""
     now = datetime.now(timezone.utc)
-    user_progress_container = get_container(USER_FACT_PROGRESS_CONTAINER_NAME)
 
     for fact in facts_to_serve:
         if fact["id"] not in user_fact_progress:
             progress = create_initial_progress(user_id, fact["id"], now)
-            user_progress_container.upsert_item(progress.to_dict())
+            upsert_item(USER_FACT_PROGRESS_CONTAINER_NAME, progress.to_dict())
 
 def create_lesson(facts_to_serve: list[Fact], all_subject_facts: list[Fact]) -> Lesson:
     """Create a lesson from the list of facts to serve the user. 
@@ -224,10 +215,9 @@ def update_progress(user_id: str, fact_grades: dict[str, Grade]) -> None:
         lambda p: p["factId"] in fact_grades.keys()
     )
     now = datetime.now(timezone.utc)
-    user_progress_container = get_container(USER_FACT_PROGRESS_CONTAINER_NAME)
 
     # Update the progress for each reviewed fact
     for fact_id, progress in user_fact_progress.items():
         grade = fact_grades[fact_id]
         new_progress = schedule(progress, grade, now)
-        user_progress_container.upsert_item(new_progress.to_dict())
+        upsert_item(USER_FACT_PROGRESS_CONTAINER_NAME, new_progress.to_dict())
