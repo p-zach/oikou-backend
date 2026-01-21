@@ -33,7 +33,7 @@ def start_lesson(user_id: str, region: str, subject: str, question_count: int) -
     Returns:
         Lesson: The lesson to send the user.
     """
-    subject_facts = get_all_subject_facts(subject)
+    subject_facts = get_all_subject_facts(subject, region)
 
     if len(subject_facts) < question_count:
         raise ValueError("Not enough facts available for the requested subject")
@@ -80,7 +80,8 @@ def get_user_fact_progress(user_id: str, predicate: Callable[[dict], bool] | Non
     Optionally filter by a predicate which takes a UserFactProgress dict.
     """
     user_progress_container = get_container(USER_FACT_PROGRESS_CONTAINER_NAME)
-    all_user_fact_progress = user_progress_container    
+    all_user_fact_progress = user_progress_container
+    # TODO: Extract all DB queries to a shared utility module
     user_fact_progress: dict[str, UserFactProgress] = {
         p["factId"]: UserFactProgress.from_dict(p)
         for p in all_user_fact_progress.query_items(

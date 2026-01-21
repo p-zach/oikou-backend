@@ -2,6 +2,7 @@ import json
 import logging
 from http import HTTPStatus
 import azure.functions as func
+
 from blueprints.utils.router import get_router
 from shared.lessons import start_lesson, complete_lesson
 
