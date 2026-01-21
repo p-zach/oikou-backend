@@ -3,13 +3,12 @@ import logging
 from http import HTTPStatus
 import azure.functions as func
 
-from blueprints.utils.router import get_router
+from blueprints.utils.router import v1
 from shared.lessons import start_lesson, complete_lesson
 
 lessons_bp = func.Blueprint()
-versioned = get_router("v1").route
 
-@lessons_bp.route(route=versioned("lesson/start"), methods=["POST"])
+@lessons_bp.route(route=v1("lesson/start"), methods=["POST"])
 def lesson_start(req: func.HttpRequest) -> func.HttpResponse:
     try:
         user_id = req.headers.get("X-User-Id")
@@ -44,7 +43,7 @@ def lesson_start(req: func.HttpRequest) -> func.HttpResponse:
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
-@lessons_bp.route(route=versioned("lesson/complete"), methods=["POST"])
+@lessons_bp.route(route=v1("lesson/complete"), methods=["POST"])
 def lesson_complete(req: func.HttpRequest) -> func.HttpResponse:
     try:
         user_id = req.headers.get("X-User-Id")

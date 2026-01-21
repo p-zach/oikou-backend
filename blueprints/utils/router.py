@@ -10,3 +10,6 @@ class Router:
 
 def get_router(prefix: str):
     return Router(prefix)
+
+v1 = get_router("v1").route
+"""Wrapper for v1 API routes."""

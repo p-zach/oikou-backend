@@ -3,15 +3,12 @@ import logging
 from http import HTTPStatus
 import azure.functions as func
 
-from blueprints.utils.router import get_router
+from blueprints.utils.router import v1
 from shared.facts import get_specific_facts
 
 facts_bp = func.Blueprint()
-versioned = get_router("v1").route
 
-FACTS_CONTAINER_NAME = "facts"
-
-@facts_bp.route(route=versioned("facts"), methods=["GET"])
+@facts_bp.route(route=v1("facts"), methods=["GET"])
 def get_facts(req: func.HttpRequest) -> func.HttpResponse:
     try:
         fact_ids_param = req.params.get("fact_ids")
