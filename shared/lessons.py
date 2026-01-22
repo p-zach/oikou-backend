@@ -1,7 +1,7 @@
 import uuid
 
 from shared.challenges import create_multiple_choice_challenge
-from shared.facts import get_all_subject_facts, classify_facts, select_facts_to_serve, get_fact_grades
+from shared.facts import get_all_facts, classify_facts, select_facts_to_serve, get_fact_grades
 from shared.progress import get_user_fact_progress, upsert_initial_progress_data, update_progress
 
 from shared.models.lesson import Lesson, ChallengeResult
@@ -23,7 +23,7 @@ def start_lesson(user_id: str, region: str, subject: str, question_count: int) -
     Returns:
         Lesson: The lesson to send the user.
     """
-    subject_facts = get_all_subject_facts(subject, region)
+    subject_facts = get_all_facts(subject, region)
 
     if len(subject_facts) < question_count:
         raise ValueError("Not enough facts available for the requested subject")

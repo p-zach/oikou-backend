@@ -21,10 +21,16 @@ def get_mastery_summary(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=HTTPStatus.BAD_REQUEST
             )
 
-        region = req.params.get("region")
-        subject = cast(LessonSubject | None, req.params.get("subject"))
+        regions = req.params.get("regions")
+        subjects = req.params.get("subjects")
+
+        region_list = regions.split(',') if regions is not None else []
+        subject_list = cast(
+            list[LessonSubject] | None, 
+            subjects.split(',') if subjects is not None else None
+        )
         
-        mastery = get_mastery(user_id, region, subject)
+        mastery = get_mastery(user_id, region_list, subject_list)
 
         return func.HttpResponse(
             json.dumps(mastery),

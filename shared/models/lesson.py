@@ -1,4 +1,4 @@
-from typing import TypedDict, Literal
+from typing import TypedDict, Literal, get_args
 from shared.models.challenge import Challenge, ChallengeResult
 
 LessonSubject = Literal[
@@ -6,6 +6,8 @@ LessonSubject = Literal[
     "flags", 
     "neighbors"
 ]
+
+LESSON_SUBJECTS: list[LessonSubject] = list(get_args(LessonSubject))
 
 class Lesson(TypedDict):
     sessionId: str

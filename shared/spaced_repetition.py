@@ -5,6 +5,8 @@ from shared.models.spaced_repetition import UserFactProgress, Grade
 # be "mastered" in the UI.
 MASTERY_EASE_THRESHOLD = 2.7
 MASTERY_REPETITIONS_THRESHOLD = 2
+# The minimum `repetitions` necessary for a fact to be considered half-mastered.
+HALF_MASTERY_REPETITIONS_THRESHOLD = 1
 
 def schedule(progress: UserFactProgress, grade: Grade, now: datetime) -> UserFactProgress:
     if grade < 2:
@@ -45,8 +47,11 @@ def create_initial_progress(user_id: str, fact_id: str, now: datetime) -> UserFa
         lastReviewedAt=None,
     )
 
-def is_mastered(progress: UserFactProgress) -> bool:
-    return (
-        progress.ease >= MASTERY_EASE_THRESHOLD 
-    and progress.repetitions >= MASTERY_REPETITIONS_THRESHOLD
-    )
+def get_mastery_percent(progress: UserFactProgress) -> float:
+    if progress.ease >= MASTERY_EASE_THRESHOLD \
+       and progress.repetitions >= MASTERY_REPETITIONS_THRESHOLD:
+        return 1
+    elif progress.repetitions >= HALF_MASTERY_REPETITIONS_THRESHOLD:
+        return 0.5
+    return 0
+    
