@@ -12,6 +12,9 @@ def fact_from_dict(d: dict) -> Fact:
     filtered = {k: v for k, v in d.items() if k in field_names}
     return Fact(**filtered)
 
-def fact_in_subject(fact_id: str, subject: str) -> bool:
+def is_fact_in_subject(fact_id: str, subject: str) -> bool:
     # Fact IDs are like "subject:COUNTRY_CODE[:rev]"
     return fact_id.split(':')[0] == subject
+
+def get_fact_country_code(fact_id: str) -> str:
+    return fact_id.split(':')[1]

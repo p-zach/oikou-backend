@@ -1,6 +1,11 @@
 from datetime import datetime, timedelta
 from shared.models.spaced_repetition import UserFactProgress, Grade
 
+# The minimum `ease` and `repetitions` at or above which a fact is considered to 
+# be "mastered" in the UI.
+MASTERY_EASE_THRESHOLD = 2.7
+MASTERY_REPETITIONS_THRESHOLD = 2
+
 def schedule(progress: UserFactProgress, grade: Grade, now: datetime) -> UserFactProgress:
     if grade < 2:
         progress.repetitions = 0
@@ -14,6 +19,10 @@ def schedule(progress: UserFactProgress, grade: Grade, now: datetime) -> UserFac
         else:
             progress.intervalDays = round(progress.intervalDays * progress.ease)
 
+    # grade 3: +0.10
+    # grade 2: +0.00
+    # grade 1: -0.14
+    # grade 0: -0.32
     progress.ease = max(
         1.3,
         progress.ease + (0.1 - (3 - grade) * (0.08 + (3 - grade) * 0.02))
@@ -34,4 +43,10 @@ def create_initial_progress(user_id: str, fact_id: str, now: datetime) -> UserFa
         repetitions=0,
         dueAt=now.isoformat(),
         lastReviewedAt=None,
+    )
+
+def is_mastered(progress: UserFactProgress) -> bool:
+    return (
+        progress.ease >= MASTERY_EASE_THRESHOLD 
+    and progress.repetitions >= MASTERY_REPETITIONS_THRESHOLD
     )
