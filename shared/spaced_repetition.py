@@ -5,8 +5,23 @@ from shared.models.spaced_repetition import UserFactProgress, Grade
 # be "mastered" in the UI.
 MASTERY_EASE_THRESHOLD = 2.7
 MASTERY_REPETITIONS_THRESHOLD = 2
-# The minimum `repetitions` necessary for a fact to be considered half-mastered.
-HALF_MASTERY_REPETITIONS_THRESHOLD = 1
+
+# The percent mastery for facts that have met a mid-level repetitions threshold 
+# but do not meet the full mastery thresholds. This is used to give partial 
+# credit in the UI for facts that are on their way to being mastered but haven't 
+# reached the full mastery thresholds yet.
+MOSTLY_MASTERED_PERCENT = 0.50
+# The minimum `repetitions` at or above which a fact is considered to be "mostly 
+# mastered" in the UI.
+MOSTLY_MASTERED_REPETITIONS_THRESHOLD = 2
+
+# The percent mastery for facts that meet the minimum repetitions threshold for 
+# being considered "partly mastered" but do not meet the full or mostly mastered 
+# thresholds.
+PART_MASTERY_PERCENT = 0.25
+# The minimum `repetitions` necessary for a fact to be considered partly 
+# mastered.
+PART_MASTERY_REPETITIONS_THRESHOLD = 1
 
 def schedule(progress: UserFactProgress, grade: Grade, now: datetime) -> UserFactProgress:
     if grade < 2:
@@ -51,7 +66,9 @@ def get_mastery_percent(progress: UserFactProgress) -> float:
     if progress.ease >= MASTERY_EASE_THRESHOLD \
        and progress.repetitions >= MASTERY_REPETITIONS_THRESHOLD:
         return 1
-    elif progress.repetitions >= HALF_MASTERY_REPETITIONS_THRESHOLD:
-        return 0.5
+    elif progress.repetitions >= MOSTLY_MASTERED_REPETITIONS_THRESHOLD:
+        return MOSTLY_MASTERED_PERCENT
+    elif progress.repetitions >= PART_MASTERY_REPETITIONS_THRESHOLD:
+        return PART_MASTERY_PERCENT
     return 0
     
